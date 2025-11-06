@@ -1,0 +1,56 @@
+# Project Rules - MealPrep Kata
+
+## Global Communication Rules
+
+### Markdown & Documentation (from docs/rules/MARKDOWN.md)
+- Be as concise as possible in all responses and generated content
+- Avoid unnecessary verbosity
+- Focus on clarity and brevity
+
+## Project Structure
+
+When generating or modifying files, respect this structure:
+- `docs/agents/` - Agent prompt definitions (LEAD, DEV, etc.)
+- `docs/issues/` - Feature requests and bug reports
+- `docs/tasks/` - Implementation plans generated from issues
+- `docs/memory-bank/` - Project documentation (STACK, API, DATABASE, PROJECT_BRIEF)
+- `docs/prompts/` - Reusable prompt templates
+- `docs/rules/` - Project-wide rules and conventions
+
+## File Generation Standards
+
+### When creating agent files (docs/agents/):
+- Include clear role definition
+- Specify required reading (memory-bank docs)
+- Define input/output format
+- Include process steps
+- Provide examples
+
+### When creating memory-bank files (docs/memory-bank/):
+- Be concise and factual
+- Use clear headings and structure
+- Keep updated with current state
+- Include code examples where relevant
+
+### When creating task files (docs/tasks/):
+- Follow TASK-YYYY-MM-DD-feature-name.md naming
+- Include complexity estimates (S/M/L/XL)
+- Break down into atomic subtasks
+- Specify exact file paths
+- Include acceptance criteria
+
+## Code Standards
+
+- Write clean, maintainable code
+- Follow existing project patterns
+- Include proper error handling
+- Write tests for new features
+- Document complex logic
+
+## General Behavior
+
+- Always check existing documentation before creating new files
+- Maintain consistency with existing patterns
+- Ask for clarification when requirements are ambiguous
+- Provide specific, actionable outputs
+- Reference related files when appropriate
