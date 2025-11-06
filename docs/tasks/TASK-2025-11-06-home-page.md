@@ -1,455 +1,331 @@
 # TASK: Home Page - Daily Digest & Weekly Meal Plan
 
-**Issue:** #1 | **Date:** 2025-11-06 | **Complexity:** XL | **Time:** 24h
+**Issue:** #1 | **Date:** 2025-11-06 | **Complexity:** XL | **Time:** 32h
 
 ## 📋 Summary
 
-Implement the Home Page for MealPrep with two main views: (1) Mobile "Daily Digest" displaying today's meals with swap/cook actions, and (2) Desktop "This Week's Meal Plan" featuring an interactive calendar, weekly meal table, quick actions, and upcoming meals section. Both views must be responsive, visually appealing with orange theme (#FF8C00, #FFD700), and integrate with existing meal plan APIs.
+Implement the Home Page with two responsive views: (1) Mobile Daily Digest showing today's meals with Swap/Cook actions, (2) Desktop Weekly Meal Plan with interactive calendar, meal table, quick actions, and upcoming meals section. Includes dynamic date navigation, meal management, and seamless mobile-to-desktop adaptation.
 
 ## 🎯 Objectives
 
-- [ ] Display daily meal digest with breakfast, lunch, dinner cards (mobile-first)
-- [ ] Implement interactive weekly meal plan with calendar navigation (desktop)
-- [ ] Enable "Swap Meal" functionality with alternative recipe suggestions
-- [ ] Enable "Cook Now" action to view recipe details
-- [ ] Create Quick Actions for adding recipes, creating meal plans, generating shopping lists
-- [ ] Show upcoming meals with dates and times
-- [ ] Ensure responsive design works seamlessly on mobile and desktop
-- [ ] Handle empty states when no meals are planned
+- [ ] Display daily meal digest (breakfast, lunch, dinner) with meal cards
+- [ ] Implement Swap Meal functionality with alternative suggestions
+- [ ] Implement Cook Now navigation to recipe details
+- [ ] Create weekly calendar view with current day highlight
+- [ ] Build weekly meal plan table (7 days × 3 meals)
+- [ ] Add quick action buttons (Add Recipe, Create Meal Plan, Generate Grocery List)
+- [ ] Show upcoming meals section with preview cards
+- [ ] Ensure responsive design (mobile-first, desktop-enhanced)
+- [ ] Handle loading states and error scenarios
 
 ## 🔍 Technical Analysis
 
 **Frontend:**
-- HomePage component with mobile/desktop responsive views
-- MealCard component (reusable for daily digest & upcoming meals)
-- Calendar component with month navigation
-- WeeklyMealTable component (desktop)
-- QuickActions component (desktop)
-- MealSwapModal component for swapping meals
+- `pages/index.vue` - Home page route
+- `components/home/DailyDigest.vue` - Mobile daily view
+- `components/home/WeeklyMealPlan.vue` - Desktop weekly view
+- `components/home/MealCard.vue` - Individual meal card
+- `components/home/Calendar.vue` - Interactive calendar
+- `components/home/MealTable.vue` - Weekly meal table
+- `components/home/QuickActions.vue` - Action buttons
+- `components/home/UpcomingMeals.vue` - Upcoming meals list
+- `components/layout/AppHeader.vue` - Top navigation bar
+- `composables/useMealPlans.ts` - Meal plan data management
+- `composables/useCalendar.ts` - Calendar logic
+- `stores/mealPlan.ts` - Pinia store for meal plan state
 
 **APIs:**
-- `GET /api/meal-plans/daily-digest` - Retrieve today's meals
-- `GET /api/meal-plans/{id}` - Retrieve weekly meal plan
-- `GET /api/meal-plan-recipes/{id}/alternatives` - Get swap suggestions
-- `PUT /api/meal-plan-recipes/{id}/swap` - Replace meal with alternative
-- `POST /api/meal-plans` - Create new meal plan
+- `GET /api/meal-plans/daily-digest` - Today's meals
+- `GET /api/meal-plans` - User's meal plans (weekly view)
+- `GET /api/meal-plan-recipes/{id}/alternatives` - Swap suggestions
+- `PUT /api/meal-plan-recipes/{id}/swap` - Execute swap
+- `GET /api/recipes/{id}` - Recipe details for Cook Now
 
-**Database:**
-- Uses existing `meal_plans`, `meal_plan_recipes`, `recipes` tables
-- No schema changes required
+**Database:** Uses existing schema (meal_plans, meal_plan_recipes, recipes)
 
 **Dependencies:**
-- Tailwind CSS for styling (orange theme: #FF8C00, #FFD700)
-- Heroicons for icons (swap, cook, calendar, plus, list)
-- Pinia store for meal plan state management
-- date-fns for date formatting
-- Headless UI for modals and interactive components
+- Tailwind CSS (colors: #FF8C00, #FFD700)
+- Heroicons (swap, cook, calendar icons)
+- date-fns (date formatting)
+- Pinia (state management)
+- @vueuse/core (responsive breakpoints)
 
 ## 📐 Architecture
 
 **Component Tree:**
 ```
-pages/
-└── index.vue (HomePage)
-    ├── components/
-    │   ├── home/
-    │   │   ├── DailyDigest.vue (mobile view)
-    │   │   ├── MealCard.vue (reusable)
-    │   │   ├── WeeklyPlan.vue (desktop view)
-    │   │   ├── Calendar.vue
-    │   │   ├── WeeklyMealTable.vue
-    │   │   ├── QuickActions.vue
-    │   │   ├── UpcomingMeals.vue
-    │   │   └── MealSwapModal.vue
+pages/index.vue
+├── AppHeader (logo, navigation, profile)
+├── DailyDigest (mobile: v-if="isMobile")
+│   ├── DateDisplay
+│   └── MealCard (×3: breakfast, lunch, dinner)
+│       ├── Image
+│       ├── MealName
+│       └── Actions (Swap Meal, Cook Now)
+└── WeeklyMealPlan (desktop: v-if="!isMobile")
+    ├── Calendar (month view, day selection)
+    ├── MealTable (7 days × 3 meals grid)
+    ├── QuickActions (3 buttons)
+    └── UpcomingMeals (preview cards)
 ```
 
 **Data Flow:**
-1. HomePage loads and fetches daily digest/weekly plan from API
-2. Data stored in Pinia store (`useMealPlanStore`)
-3. Components reactively display data from store
-4. User actions (swap, cook, navigate) trigger store mutations
-5. Store calls API and updates state
+1. Page loads → fetch daily digest / weekly plan from API
+2. Store data in Pinia store (reactive state)
+3. Components consume store data
+4. User actions (swap/cook) → API calls → update store → re-render
 
-**State Management (Pinia):**
-```typescript
-useMealPlanStore:
-  - dailyMeals: { breakfast, lunch, dinner }
-  - weeklyPlan: { startDate, endDate, meals[] }
-  - upcomingMeals: Meal[]
-  - currentDate: Date
-  - isLoading: boolean
-  - error: string | null
-```
+**State Management:**
+- `mealPlanStore` holds current meal plan, daily meals, selected date
+- Composables provide reusable logic for fetching and mutations
+- Optimistic updates for better UX
 
 ## ✅ Development Plan
 
-### Phase 1: State Management & API Integration
+### Phase 1: Foundation & Setup (6h)
 
-- [ ] **TASK-1.1** - Create Pinia meal plan store (M, 3h)
-  - Create `stores/useMealPlanStore.ts`
-  - Define state: dailyMeals, weeklyPlan, upcomingMeals, currentDate, loading, error
-  - Actions: fetchDailyDigest(), fetchWeeklyPlan(startDate, endDate), swapMeal(mealPlanRecipeId, newRecipeId), fetchAlternatives(mealPlanRecipeId)
-  - Getters: getDailyMealByType(mealType), getWeeklyMealsByDay(date), getUpcomingMeals()
-  - Integrate with API endpoints using $fetch
-  - Handle loading states and error handling
-  - Tests: `useMealPlanStore.test.ts`
-  - **Criteria:** Store successfully fetches and manages meal plan data, handles errors gracefully
+- [ ] **TASK-1.1** - Setup routing and page structure (S, 1.5h)
+  - Create `pages/index.vue` with basic layout
+  - Configure Nuxt route for home page
+  - Add page metadata (title, description)
+  - Files: `pages/index.vue`
+  - Criteria: Home route accessible at `/`, renders placeholder
 
-- [ ] **TASK-1.2** - Create TypeScript types and interfaces (S, 1.5h)
-  - Create `types/meal.ts`
-  - Define interfaces: Meal, MealPlan, MealPlanRecipe, Recipe, MealType enum
-  - Define DTOs: DailyDigestResponse, WeeklyPlanResponse, AlternativesResponse
-  - Export all types for reuse across components
-  - **Criteria:** All meal-related types are defined and exported
+- [ ] **TASK-1.2** - Create Pinia meal plan store (M, 2.5h)
+  - Create `stores/mealPlan.ts`
+  - State: currentMealPlan, dailyMeals, selectedDate, loading, error
+  - Actions: fetchDailyDigest, fetchWeeklyPlan, swapMeal, selectDate
+  - Getters: mealsForDate, upcomingMeals
+  - Files: `stores/mealPlan.ts`
+  - Criteria: Store manages meal plan state, actions call API
 
-- [ ] **TASK-1.3** - Create API composable (M, 2h)
-  - Create `composables/useMealPlanApi.ts`
-  - Functions: fetchDailyDigest(), fetchWeeklyPlan(params), getMealAlternatives(id), swapMeal(id, newRecipeId), createMealPlan(params)
-  - Handle authentication headers (Sanctum token)
-  - Error handling with toast notifications
-  - Tests: `useMealPlanApi.test.ts`
-  - **Criteria:** API calls work with proper error handling and auth
+- [ ] **TASK-1.3** - Create meal plans composable (M, 2h)
+  - Create `composables/useMealPlans.ts`
+  - Methods: fetchDailyDigest, fetchWeeklyPlan, getAlternatives, executeMealSwap
+  - Error handling and loading states
+  - Files: `composables/useMealPlans.ts`
+  - Criteria: Composable wraps API calls, returns reactive data
 
-### Phase 2: Core Components - Daily Digest (Mobile)
+### Phase 2: Shared Components (5h)
 
-- [ ] **TASK-2.1** - Create MealCard component (M, 3h)
-  - Create `components/home/MealCard.vue`
-  - Props: meal (Meal), mealType (breakfast/lunch/dinner), showActions (boolean)
-  - Display: meal image (fallback placeholder), meal name, meal type badge
-  - Actions: "Swap Meal" button (outline, orange border), "Cook Now" button (filled, orange)
-  - Emit events: @swap, @cook
-  - Responsive design: full-width on mobile, fixed width on desktop
-  - Handle long meal names with ellipsis or line wrap
-  - Loading state for image
-  - Tests: `MealCard.test.ts`
-  - **Criteria:** Card displays correctly with proper styling, buttons emit events
-
-- [ ] **TASK-2.2** - Create DailyDigest component (M, 3h)
-  - Create `components/home/DailyDigest.vue`
-  - Display header: "Daily Digest" title, current date in orange
-  - Render 3 MealCard components for breakfast, lunch, dinner
-  - Handle empty states: "No meal planned" with "Add Recipe" CTA
-  - Vertical scrolling on mobile
-  - Loading skeleton while fetching data
-  - Handle @swap event -> open MealSwapModal
-  - Handle @cook event -> navigate to recipe detail page
-  - Tests: `DailyDigest.test.ts`
-  - **Criteria:** Displays daily meals correctly, handles empty states, responsive on mobile
-
-- [ ] **TASK-2.3** - Create MealSwapModal component (L, 4h)
-  - Create `components/home/MealSwapModal.vue`
-  - Props: isOpen (boolean), mealPlanRecipeId (number), currentMeal (Meal)
-  - Use Headless UI Dialog for modal
-  - Fetch alternatives from API on open
-  - Display list of alternative recipes with images, names, prep time
-  - User selects alternative -> confirm swap
-  - Call swapMeal API on confirm
-  - Loading states during fetch and swap
-  - Error handling with error messages
-  - Close modal on success or cancel
-  - Tests: `MealSwapModal.test.ts`
-  - **Criteria:** Modal opens, displays alternatives, swaps meal successfully, closes properly
-
-### Phase 3: Desktop Components - Weekly Plan
-
-- [ ] **TASK-3.1** - Create Calendar component (L, 5h)
-  - Create `components/home/Calendar.vue`
-  - Display current month and year (e.g., "July 2024")
-  - Navigation arrows to switch months (< >)
-  - Render calendar grid: 7 columns (S M T W T F S), 5-6 rows
-  - Highlight current day with orange circle (#FF8C00)
-  - Dim days outside current month (gray)
-  - Emit @daySelect event with selected date
-  - Use date-fns for date calculations
-  - Responsive: hide on mobile, show on desktop (md:block)
-  - Tests: `Calendar.test.ts`
-  - **Criteria:** Calendar displays correctly, navigation works, current day highlighted, emits selection event
-
-- [ ] **TASK-3.2** - Create WeeklyMealTable component (L, 5h)
-  - Create `components/home/WeeklyMealTable.vue`
-  - Props: startDate (Date), endDate (Date), meals (MealPlanRecipe[])
-  - Display title: "This Week's Meal Plan" with date range
-  - Render table: columns (Day, Breakfast, Lunch, Dinner), rows (Mon-Sun)
-  - Meal names in orange (#FF8C00), clickable
-  - Handle empty cells: show "—" or "Add meal" link
-  - Click meal name -> navigate to recipe detail or open edit modal
-  - Responsive: hide on mobile, show table layout on desktop
-  - Tests: `WeeklyMealTable.test.ts`
-  - **Criteria:** Table displays weekly meals, empty states handled, meals are clickable
-
-- [ ] **TASK-3.3** - Create QuickActions component (M, 2.5h)
-  - Create `components/home/QuickActions.vue`
-  - Three action buttons vertically stacked:
-    - "Add Recipe" (icon: plus) -> navigate to /recipes
-    - "Create Meal Plan" (icon: calendar) -> open create meal plan modal/page
-    - "Generate Grocery List" (icon: list) -> navigate to /grocery-list with auto-generate
-  - Button style: transparent background, orange border (#FFD700), orange text (#FF8C00)
-  - Hover states
-  - Use Heroicons for icons
-  - Responsive: hide on mobile, show on desktop sidebar
-  - Tests: `QuickActions.test.ts`
-  - **Criteria:** Buttons display correctly, navigate/trigger actions on click
-
-- [ ] **TASK-3.4** - Create UpcomingMeals component (M, 3h)
-  - Create `components/home/UpcomingMeals.vue`
-  - Display title: "Upcoming Meals"
-  - Render list of upcoming meals (next 5-7 meals)
-  - Each meal card: thumbnail image, meal name, date/time (e.g., "Spaghetti Bolognese, July 22, 7:00 PM")
-  - Light orange background (#FFF5E6) for cards
-  - Click meal -> navigate to recipe detail
-  - Handle empty state: "No upcoming meals"
-  - Scrollable list if many meals
-  - Responsive: stack vertically on mobile, sidebar on desktop
-  - Tests: `UpcomingMeals.test.ts`
-  - **Criteria:** Displays upcoming meals with correct formatting, clickable, responsive
-
-- [ ] **TASK-3.5** - Create WeeklyPlan parent component (M, 2.5h)
-  - Create `components/home/WeeklyPlan.vue`
-  - Layout: Calendar (top), WeeklyMealTable (center), QuickActions (left sidebar), UpcomingMeals (right sidebar)
-  - Use CSS Grid or Flexbox for desktop layout
-  - Handle calendar day selection -> update meal table if needed
-  - Fetch weekly plan data on mount
-  - Loading states for all sections
-  - Responsive: hide on mobile, show on desktop (md:grid)
-  - Tests: `WeeklyPlan.test.ts`
-  - **Criteria:** Desktop layout displays correctly with all sections, responsive behavior works
-
-### Phase 4: Main Page Integration
-
-- [ ] **TASK-4.1** - Create HomePage component (M, 3h)
-  - Create/update `pages/index.vue`
-  - Import DailyDigest and WeeklyPlan components
-  - Display DailyDigest on mobile (md:hidden)
-  - Display WeeklyPlan on desktop (hidden md:block)
-  - Implement app header: "MealPrep" logo, navigation tabs (Home, Recipes, Grocery List, Settings), notification icon, profile picture
-  - Use Nuxt layout or create AppHeader component
-  - Fetch initial data on page load (dailyDigest for mobile, weeklyPlan for desktop)
-  - Handle loading states with skeletons
-  - Handle errors with error messages and retry button
-  - Tests: `index.test.ts`
-  - **Criteria:** Page displays correctly on mobile and desktop, data loads properly, navigation works
-
-- [ ] **TASK-4.2** - Create AppHeader component (M, 2.5h)
+- [ ] **TASK-2.1** - Create AppHeader component (M, 2.5h)
   - Create `components/layout/AppHeader.vue`
-  - Mobile: "MealPrep" title centered, menu icon (hamburger) on right
-  - Desktop: "MealPrep" logo left, navigation tabs (Home, Recipes, Grocery List, Settings) center, notification icon + profile right
-  - Active tab highlighted in orange
-  - Fixed position at top
-  - Use Headless UI Menu for mobile dropdown navigation
-  - Use Heroicons for icons
-  - Tests: `AppHeader.test.ts`
-  - **Criteria:** Header displays correctly on mobile/desktop, navigation works, active tab highlighted
+  - Logo, app title "MealPrep"
+  - Navigation tabs (Home, Recipes, Grocery List, Settings)
+  - Notification icon + profile picture (right side)
+  - Responsive: fixed top, white background
+  - Files: `components/layout/AppHeader.vue`
+  - Criteria: Header displays on all pages, navigation works
 
-- [ ] **TASK-4.3** - Implement responsive breakpoints and mobile navigation (M, 2h)
-  - Configure Tailwind breakpoints if needed
-  - Implement mobile menu (hamburger) with slide-out drawer
-  - Use Headless UI Dialog for mobile menu
-  - Smooth transitions for mobile menu open/close
-  - Ensure all components respect mobile/desktop breakpoints
-  - Test on various screen sizes (320px, 768px, 1024px, 1920px)
-  - **Criteria:** Responsive design works seamlessly across all screen sizes
+- [ ] **TASK-2.2** - Create MealCard component (M, 2.5h)
+  - Create `components/home/MealCard.vue`
+  - Props: meal (name, image, type), onSwap, onCook
+  - Layout: image (cover), meal name, two action buttons
+  - Buttons: "Swap Meal" (outline orange), "Cook Now" (solid orange)
+  - Icons from Heroicons
+  - Responsive: full width on mobile, constrained on desktop
+  - Handle missing images (placeholder)
+  - Files: `components/home/MealCard.vue`, `components/home/MealCard.test.ts`
+  - Criteria: Renders meal with image, name, buttons; handles clicks
 
-### Phase 5: Styling & Polish
+### Phase 3: Mobile Daily Digest (7h)
 
-- [ ] **TASK-5.1** - Implement orange theme and design system (M, 3h)
-  - Configure Tailwind theme in `tailwind.config.js`
-  - Add custom colors: primary (#FF8C00), secondary (#FFD700)
-  - Define button variants: primary, secondary, outline
-  - Create utility classes for cards, shadows, spacing
-  - Ensure consistent spacing and padding across components
-  - Apply rounded corners and shadows to cards
-  - Verify color contrast for accessibility (4.5:1 ratio)
-  - **Criteria:** Orange theme applied consistently, design system in place
+- [ ] **TASK-3.1** - Create DailyDigest component structure (M, 2h)
+  - Create `components/home/DailyDigest.vue`
+  - Layout: title "Daily Digest", date display, meal cards list
+  - Date display: format "July 15, Monday" in orange
+  - Vertical scrolling for meal cards
+  - Files: `components/home/DailyDigest.vue`
+  - Criteria: Component renders with static data
 
-- [ ] **TASK-5.2** - Add loading states and skeletons (M, 2.5h)
-  - Create `components/ui/SkeletonCard.vue` for meal card skeleton
-  - Create `components/ui/SkeletonTable.vue` for table skeleton
-  - Create `components/ui/LoadingSpinner.vue`
-  - Implement skeletons in DailyDigest, WeeklyMealTable, UpcomingMeals
-  - Smooth transitions when data loads (fade-in)
-  - Tests: `SkeletonCard.test.ts`, `SkeletonTable.test.ts`
-  - **Criteria:** Loading states provide good UX, no layout shift
+- [ ] **TASK-3.2** - Integrate daily digest API (M, 2.5h)
+  - Connect DailyDigest to mealPlanStore
+  - Fetch data on mount using composable
+  - Map API response to MealCard props
+  - Display loading spinner during fetch
+  - Show error message if API fails
+  - Empty state: "No meals planned for today"
+  - Files: `components/home/DailyDigest.vue`
+  - Criteria: Displays today's meals from API, handles errors
 
-- [ ] **TASK-5.3** - Implement error handling and empty states (M, 2.5h)
-  - Create `components/ui/ErrorMessage.vue` component
-  - Create `components/ui/EmptyState.vue` component
-  - Add error states to all API calls with retry functionality
-  - Add empty states: "No meals planned" with "Add Recipe" CTA
-  - Handle missing images with placeholder image
-  - Display user-friendly error messages (not technical errors)
-  - Tests: `ErrorMessage.test.ts`, `EmptyState.test.ts`
-  - **Criteria:** Errors and empty states handled gracefully with clear messaging
+- [ ] **TASK-3.3** - Implement Swap Meal functionality (M, 2.5h)
+  - Create modal/sheet for swap alternatives
+  - Fetch alternatives via GET /meal-plan-recipes/{id}/alternatives
+  - Display alternative meal cards (image + name)
+  - On selection, call PUT /meal-plan-recipes/{id}/swap
+  - Optimistic update in store
+  - Show success/error toast
+  - Files: `components/home/SwapMealModal.vue`, update `composables/useMealPlans.ts`
+  - Criteria: User can swap meal, UI updates immediately, shows alternatives
 
-- [ ] **TASK-5.4** - Optimize images and performance (M, 2h)
-  - Implement lazy loading for meal images (use Nuxt Image)
-  - Configure image optimization (WebP format, multiple sizes)
-  - Use placeholder images for loading states
-  - Optimize bundle size (check imports, code splitting)
-  - Add Redis caching headers for API responses
-  - Test performance: page load < 2s, API response < 500ms
-  - **Criteria:** Images load efficiently, page performance meets targets
+- [ ] **TASK-3.4** - Implement Cook Now functionality (S, 1h)
+  - Navigate to recipe detail page on "Cook Now" click
+  - Pass recipe ID in route params
+  - Files: `components/home/MealCard.vue`
+  - Criteria: Clicking "Cook Now" redirects to `/recipes/{id}`
 
-### Phase 6: Testing & Quality Assurance
+### Phase 4: Desktop Weekly View - Calendar (5h)
 
-- [ ] **TASK-6.1** - Write unit tests for components (L, 5h)
-  - Test all components with Vitest and Vue Test Utils
-  - Mock Pinia store and API calls
-  - Test props, events, conditional rendering
-  - Test user interactions (button clicks, form submissions)
-  - Test responsive behavior (mobile vs desktop)
-  - Aim for 80%+ code coverage
-  - Files: `*.test.ts` for each component
-  - **Criteria:** All components have comprehensive unit tests, 80%+ coverage
+- [ ] **TASK-4.1** - Create Calendar composable (M, 2.5h)
+  - Create `composables/useCalendar.ts`
+  - Functions: generateCalendarDays, getCurrentMonth, navigateMonth, selectDay
+  - Handle month navigation (prev/next)
+  - Calculate weeks grid (7 days × 5-6 rows)
+  - Mark current day, selected day
+  - Files: `composables/useCalendar.ts`
+  - Criteria: Composable generates calendar data, handles navigation
 
-- [ ] **TASK-6.2** - Write integration tests (M, 3h)
-  - Test HomePage with real store and mocked APIs
-  - Test full user flows:
-    - User views daily digest
-    - User swaps a meal
-    - User clicks "Cook Now"
-    - User navigates calendar
-    - User clicks quick actions
-  - Test error scenarios (API failures, network errors)
-  - Test empty states
-  - Use Vitest for integration tests
-  - **Criteria:** Integration tests cover main user flows, all pass
+- [ ] **TASK-4.2** - Create Calendar component (M, 2.5h)
+  - Create `components/home/Calendar.vue`
+  - Month/year header with prev/next arrows
+  - 7-column grid (S M T W T F S)
+  - Day cells: number, click handler
+  - Highlight current day (orange circle)
+  - Gray out days from other months
+  - Files: `components/home/Calendar.vue`
+  - Criteria: Renders calendar, highlights today, allows day selection
 
-- [ ] **TASK-6.3** - Write E2E tests with Playwright (M, 3h)
-  - Create `e2e/home.spec.ts`
-  - Test scenarios:
-    - HomePage loads and displays daily meals
-    - User swaps a meal successfully
-    - User navigates to recipe detail
-    - Desktop view displays weekly plan
-    - Calendar navigation works
-    - Quick actions navigate correctly
-  - Test on mobile and desktop viewports
-  - Test with real API or mocked backend
-  - **Criteria:** E2E tests cover critical paths, all pass
+### Phase 5: Desktop Weekly View - Meal Table (6h)
 
-- [ ] **TASK-6.4** - Accessibility audit and fixes (M, 2.5h)
-  - Run axe or Lighthouse accessibility audit
-  - Ensure all images have alt text
-  - Verify keyboard navigation works (tab, enter, arrows)
-  - Test with screen reader (VoiceOver or NVDA)
-  - Ensure proper ARIA labels for buttons and interactive elements
-  - Verify color contrast meets WCAG 2.1 AA (4.5:1)
-  - Fix semantic HTML issues (headings, landmarks)
-  - Tests: Add accessibility tests to E2E suite
-  - **Criteria:** Page meets WCAG 2.1 AA standards, no critical accessibility issues
+- [ ] **TASK-5.1** - Create MealTable component structure (M, 3h)
+  - Create `components/home/MealTable.vue`
+  - Title: "This Week's Meal Plan" + date range
+  - Table: 4 columns (Day, Breakfast, Lunch, Dinner)
+  - 7 rows (Monday-Sunday)
+  - White background, light borders
+  - Meal names in orange (#FF8C00)
+  - Files: `components/home/MealTable.vue`
+  - Criteria: Table renders with static data
 
-### Phase 7: Documentation & Deployment
+- [ ] **TASK-5.2** - Integrate weekly meal plan API (M, 3h)
+  - Connect to mealPlanStore
+  - Fetch weekly plan via GET /api/meal-plans
+  - Map meals to table cells by date and meal_type
+  - Show empty cells for unplanned meals
+  - Click meal name → opens recipe detail modal or navigates
+  - Files: `components/home/MealTable.vue`
+  - Criteria: Table displays current week's meals from API
 
-- [ ] **TASK-7.1** - Write component documentation (S, 1.5h)
-  - Document each component with JSDoc comments
-  - Document props, events, slots
-  - Add usage examples in comments
-  - Create `docs/components/HOME.md` with component overview
-  - Include screenshots of mobile and desktop views
-  - **Criteria:** All components are documented with clear usage examples
+### Phase 6: Desktop Quick Actions & Upcoming Meals (5h)
 
-- [ ] **TASK-7.2** - Update README and project documentation (S, 1h)
-  - Update main README.md with HomePage feature
-  - Document environment variables if any
-  - Update API documentation if endpoints changed
-  - Add troubleshooting section for common issues
-  - **Criteria:** Documentation is up-to-date and accurate
+- [ ] **TASK-6.1** - Create QuickActions component (M, 2h)
+  - Create `components/home/QuickActions.vue`
+  - Three buttons: "Add Recipe", "Create Meal Plan", "Generate Grocery List"
+  - Icons: +, calendar, list (Heroicons)
+  - Outline orange buttons, vertical stack
+  - Click handlers (placeholder navigation/modals)
+  - Files: `components/home/QuickActions.vue`
+  - Criteria: Buttons render and respond to clicks
 
-- [ ] **TASK-7.3** - Create PR and deployment checklist (S, 1h)
-  - Create feature branch PR with screenshots
-  - Fill out PR template with changes, testing notes, screenshots
-  - Deployment checklist:
-    - [ ] All tests pass (unit, integration, E2E)
-    - [ ] Linting passes (ESLint, Prettier)
-    - [ ] No console errors or warnings
-    - [ ] Mobile and desktop views tested
-    - [ ] Accessibility audit passed
-    - [ ] Performance metrics met (< 2s page load)
-    - [ ] Error handling tested
-    - [ ] Empty states tested
-  - **Criteria:** PR is ready for review with complete documentation
+- [ ] **TASK-6.2** - Create UpcomingMeals component (M, 3h)
+  - Create `components/home/UpcomingMeals.vue`
+  - Title: "Upcoming Meals"
+  - List of meal preview cards
+  - Each card: thumbnail image, meal name, date/time
+  - Light orange background per card
+  - Fetch from store.upcomingMeals getter
+  - Files: `components/home/UpcomingMeals.vue`
+  - Criteria: Shows next 3-5 upcoming meals with details
+
+### Phase 7: Responsive Layout & Integration (4h)
+
+- [ ] **TASK-7.1** - Create WeeklyMealPlan component (M, 2h)
+  - Create `components/home/WeeklyMealPlan.vue`
+  - Layout: Calendar + MealTable + QuickActions + UpcomingMeals
+  - Use CSS Grid for desktop layout
+  - Calendar top-left, table center, actions left, upcoming right
+  - Files: `components/home/WeeklyMealPlan.vue`
+  - Criteria: Desktop view displays all sections cohesively
+
+- [ ] **TASK-7.2** - Implement responsive breakpoints (M, 2h)
+  - Use @vueuse/core useBreakpoints in index.vue
+  - Show DailyDigest on mobile (< 768px)
+  - Show WeeklyMealPlan on desktop (≥ 768px)
+  - Ensure smooth transitions between views
+  - Test on various screen sizes
+  - Files: `pages/index.vue`
+  - Criteria: Correct view displays based on screen size
+
+### Phase 8: Testing & Polish (4h)
+
+- [ ] **TASK-8.1** - Unit tests for components (M, 2h)
+  - Test MealCard: renders props, emits events
+  - Test Calendar: generates correct days, handles navigation
+  - Test MealTable: displays meals correctly
+  - Mock API responses and store
+  - Files: `components/**/*.test.ts`
+  - Criteria: 80%+ test coverage on components
+
+- [ ] **TASK-8.2** - Integration tests for home page (M, 2h)
+  - Test daily digest flow: load → display meals → swap meal
+  - Test weekly view flow: calendar selection → table updates
+  - Test error states and empty states
+  - Files: `pages/index.test.ts`
+  - Criteria: Critical user flows work end-to-end
 
 ## 🛠️ Guidelines
 
 **Best Practices:**
-- Mobile-first approach: design for mobile, enhance for desktop
-- Component reusability: MealCard used in multiple places
-- Consistent naming conventions: use PascalCase for components, camelCase for functions
-- Atomic commits: commit after each task completion
-- Type safety: use TypeScript strict mode, no `any` types
-- Error boundaries: wrap API calls in try-catch with proper error handling
-- Optimistic updates: update UI immediately, revert on error
-- Accessibility: keyboard navigation, ARIA labels, semantic HTML
-- Performance: lazy loading, code splitting, image optimization
-
-**Patterns:**
-- Composition API with `<script setup>` for all Vue components
-- Pinia for state management (not Vuex)
-- Composables for reusable logic (e.g., `useMealPlanApi`)
-- Tailwind utility classes for styling (no custom CSS unless necessary)
-- Headless UI for accessible interactive components
-- date-fns for date manipulation (not moment.js)
+- Mobile-first responsive design (Tailwind breakpoints: sm, md, lg)
+- Atomic component design (single responsibility)
+- TypeScript interfaces for props and API responses
+- Consistent error handling (toast notifications)
+- Optimistic UI updates for better perceived performance
+- Lazy load images with loading="lazy"
+- Use semantic HTML (nav, main, section, article)
 
 **Risks:**
-- ⚠️ **Risk:** API performance issues with large meal plans
-  - **Mitigation:** Implement pagination for weekly plans, use Redis caching, optimize queries
-- ⚠️ **Risk:** Image loading delays causing poor UX
-  - **Mitigation:** Lazy loading, placeholders, WebP optimization, CDN
-- ⚠️ **Risk:** Empty state when user has no meal plan
-  - **Mitigation:** Clear CTAs to create meal plan or add recipes, onboarding flow
-- ⚠️ **Risk:** Mobile menu conflicts with daily digest scrolling
-  - **Mitigation:** Use Headless UI Dialog with proper z-index and scroll lock
-- ⚠️ **Risk:** Calendar navigation performance on older devices
-  - **Mitigation:** Memoize calendar calculations, debounce month changes
+- ⚠️ API response time may affect initial load → Implement skeleton loaders
+- ⚠️ Large meal plan data on desktop → Paginate or limit to current week + upcoming
+- ⚠️ Image sizes vary → Use object-cover and fixed aspect ratios
+- ⚠️ Date/time handling across timezones → Use date-fns with UTC or user's locale
+- ⚠️ Swap alternatives may be empty → Show fallback message
 
 **Optimization:**
-- Performance: Page load < 2s, API response < 500ms, image lazy loading
-- Accessibility: WCAG 2.1 AA compliance, keyboard navigation, screen reader support
-- Responsive: Test on 320px (mobile), 768px (tablet), 1024px (desktop), 1920px (large desktop)
-- SEO: Meta tags, Open Graph tags, semantic HTML
-- Bundle size: Code splitting by route, dynamic imports for modals
+- Cache daily digest in Pinia (refresh on swap/cook actions)
+- Debounce calendar navigation to reduce API calls
+- Use WebP images with fallbacks
+- Lazy load WeeklyMealPlan component on desktop
+- Implement virtual scrolling for long meal lists (future)
+
+**Accessibility:**
+- Alt text for all meal images
+- Keyboard navigation for calendar (arrow keys)
+- Focus management in modals
+- ARIA labels on icon buttons
+- Color contrast 4.5:1 (orange on white meets WCAG AA)
+- Screen reader announcements for swap success/failure
+
+**Responsive Considerations:**
+- Mobile: vertical scroll, full-width cards, larger touch targets (min 44×44px)
+- Tablet: Consider showing both views or enhanced daily digest
+- Desktop: multi-column layout, hover states, keyboard shortcuts
 
 ## ✓ Acceptance Criteria
 
-**From Issue - Mobile View:**
-- [ ] App header displays "MealPrep" title and logo
-- [ ] Daily Digest section shows current date in orange
-- [ ] Three meal cards (Breakfast, Lunch, Dinner) display with images, names, and action buttons
-- [ ] "Swap Meal" button opens modal with alternative suggestions and successfully swaps meal
-- [ ] "Cook Now" button navigates to recipe detail page
-- [ ] Images load quickly and display correctly (or show placeholder if missing)
-- [ ] Smooth scrolling with no lag
-- [ ] Long meal names are handled gracefully (ellipsis or wrap)
-- [ ] Empty states show message and CTA to add meals
-
-**From Issue - Desktop View:**
-- [ ] Navigation bar displays with Home, Recipes, Grocery List, Settings tabs
-- [ ] Monthly calendar displays with current day highlighted in orange
-- [ ] Calendar navigation (< >) switches months correctly
-- [ ] Weekly meal plan table shows all meals for the week (Mon-Sun x Breakfast/Lunch/Dinner)
-- [ ] Meal names in table are clickable and navigate to recipe detail
-- [ ] Quick Actions buttons are functional and navigate/trigger correct actions
-- [ ] Upcoming Meals section displays future meals with dates/times
-- [ ] Layout adapts properly to different screen sizes (desktop and tablet)
-- [ ] All interactions work without errors
-
-**General:**
-- [ ] Tests achieve 80%+ code coverage
-- [ ] No regressions in existing features
-- [ ] Page meets WCAG 2.1 AA accessibility standards
-- [ ] Page load time < 2s, API response < 500ms
+- [ ] Mobile: Daily Digest displays today's breakfast, lunch, dinner with images and names
+- [ ] Mobile: "Swap Meal" opens alternatives modal and successfully swaps meal
+- [ ] Mobile: "Cook Now" navigates to recipe detail page
+- [ ] Desktop: Calendar shows current month with today highlighted in orange
+- [ ] Desktop: Weekly meal table displays all meals for current week
+- [ ] Desktop: Quick action buttons are clickable and trigger appropriate actions
+- [ ] Desktop: Upcoming meals section shows next meals with dates
+- [ ] Responsive: Correct view shows based on screen width (< 768px = mobile, ≥ 768px = desktop)
+- [ ] Loading states display during API calls (spinner or skeleton)
+- [ ] Error states show user-friendly messages
+- [ ] Empty states handled (no meals planned)
+- [ ] Images load correctly with placeholders for missing images
+- [ ] All interactions work on touch and mouse
+- [ ] Tests cover 80%+ of component logic
 - [ ] No console errors or warnings
-- [ ] Works on Chrome, Firefox, Safari, Edge (latest versions)
-- [ ] Works on iOS and Android mobile browsers
+- [ ] AppHeader renders with correct navigation items
 
 ## 📚 References
 
 - Issue: `docs/issues/issue-1.md`
-- Mockups: `docs/issues/images/issue-1-comment-1-mobile.png`, `docs/issues/images/issue-1-comment-2-desktop.png`
-- Stack: `docs/memory-bank/STACK.md`
-- API: `docs/memory-bank/API.md`
+- Mockups:
+  - Mobile: `docs/issues/images/issue-1-comment-1-mobile.png`
+  - Desktop: `docs/issues/images/issue-1-comment-2-desktop.png`
+- APIs: `docs/memory-bank/API.md`
 - Database: `docs/memory-bank/DATABASE.md`
-- Project Brief: `docs/memory-bank/PROJECT_BRIEF.md`
-- Design System: Tailwind CSS with custom orange theme (#FF8C00, #FFD700)
-- Icons: Heroicons (https://heroicons.com/)
-- UI Components: Headless UI (https://headlessui.com/)
+- Stack: `docs/memory-bank/STACK.md`
