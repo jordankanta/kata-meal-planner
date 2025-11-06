@@ -1,18 +1,27 @@
 # Technical Stack - MealPrep
 
-## Backend
-- **Laravel 11.x** (PHP 8.2+) - RESTful API
+## Backend (Current)
+- **Laravel 12.0** (PHP 8.2+) - RESTful API
+- **SQLite** - Database (default, MySQL/MariaDB/PostgreSQL supported)
+- **Vite 7.0** - Asset bundling
+- **Tailwind CSS 4.0** - Backend UI styling
+- **Axios 1.11** - HTTP client
+- **Concurrently** - Process management
+
+### Backend - To Be Added
 - **Laravel Sanctum** - Authentication
-- **MySQL 8.0+** - Database
 - **Redis** - Caching, sessions, queues
 - **Laravel Scout** - Recipe search
 - **Intervention Image** - Image optimization
 - **Laravel Excel** - PDF/Excel export
 
-## Frontend
-- **Nuxt 3** (Vue 3) - SSR framework
+## Frontend (Current)
+- **Nuxt 4.2.0** (Vue 3.5) - SSR framework
+- **Vue Router 4.6** - Routing
+
+### Frontend - To Be Added
 - **TypeScript** - Type safety
-- **Tailwind CSS 3.x** - UI styling (primary: #FF8C00, #FFD700)
+- **Tailwind CSS 4.0** - UI styling (primary: #FF8C00, #FFD700)
 - **Pinia** - State management
 - **Headless UI** - Accessible components
 - **Heroicons** - Icon library
@@ -21,17 +30,22 @@
 - **date-fns** - Date formatting
 
 ## Development
-- **Composer** / **npm/pnpm** - Package management
-- **Docker + Docker Compose** - Local development
-- **Laravel Sail** - Docker environment (optional)
-- **PHPUnit / Pest** - Backend testing
+- **Composer** / **npm** - Package management
+- **Laravel Sail** - Docker environment
+- **PHPUnit 11.5** - Backend testing
+- **Laravel Pint** - PHP code formatting
+- **Laravel Pail** - Log viewer
+- **Faker** - Test data generation
+- **Mockery** - Mocking framework
+- **Collision** - Error reporting
+
+### Development - To Be Added
 - **Vitest** - Frontend testing
 - **Playwright / Cypress** - E2E testing
-- **ESLint + Prettier** - Code formatting
-- **PHP CS Fixer / Laravel Pint** - PHP formatting
+- **ESLint + Prettier** - Frontend code formatting
 - **PHPStan** - Static analysis
 
-## Infrastructure
+## Infrastructure (Planned)
 - **Nginx** - Web server
 - **GitHub Actions / GitLab CI** - CI/CD
 - **Laravel Forge / Vapor** - Backend hosting
@@ -40,24 +54,24 @@
 - **Sentry** - Error tracking
 - **Laravel Telescope** - Debugging (dev)
 
-## Services
+## Services (Planned)
 - **SendGrid / Mailgun / SES** - Email
 - **Google Analytics / Plausible** - Analytics (optional)
 
-## Security
+## Security (Planned)
 - HTTPS/SSL (Let's Encrypt)
-- CSRF protection
-- XSS protection
+- CSRF protection (Laravel default)
+- XSS protection (Laravel default)
 - Rate limiting
 - Password hashing (bcrypt)
 
-## Performance
+## Performance (Targets)
 - Page load: < 2s
 - API response: < 500ms
 - Image optimization (WebP, lazy loading)
-- Redis caching
+- Redis caching (when added)
 
-## Accessibility
+## Accessibility (Targets)
 - WCAG 2.1 Level AA
 - Keyboard navigation
 - ARIA labels
